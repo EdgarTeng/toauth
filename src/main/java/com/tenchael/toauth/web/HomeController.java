@@ -10,8 +10,15 @@ public class HomeController {
 
 	private static final Logger logger = Logger.getLogger(HomeController.class);
 
-	@RequestMapping(value = { "/", "/home", "index" })
-	public String actionHome(Model model) {
+	@RequestMapping(value = { "/home" })
+	public String home(Model model) {
+		logger.info("actionHome");
+		model.addAttribute("hello", "Hello Tenchael");
+		return "home";
+	}
+
+	@RequestMapping(value = { "/", "index" })
+	public String index(Model model) {
 		logger.info("actionHome");
 		model.addAttribute("hello", "Hello Tenchael");
 		return "home";

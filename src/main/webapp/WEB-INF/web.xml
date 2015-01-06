@@ -7,7 +7,10 @@
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
 		<param-value>
+			/WEB-INF/conf/application-context.xml
 			/WEB-INF/conf/service-context.xml
+			/WEB-INF/conf/entity-context.xml
+			/WEB-INF/conf/dao-context.xml
 		</param-value>
 	</context-param>
 
@@ -29,5 +32,24 @@
 		<servlet-name>springMVCServlet</servlet-name>
 		<url-pattern>/</url-pattern>
 	</servlet-mapping>
+
+
+	<!-- filter for characterEncoding -->
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
 
 </web-app>
