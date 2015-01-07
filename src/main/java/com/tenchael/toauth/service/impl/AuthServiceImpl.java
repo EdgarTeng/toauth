@@ -40,7 +40,6 @@ public class AuthServiceImpl implements AuthService {
 		params.put("redirect_uri", REDIRECT_URI + "/" + uid);
 
 		String loginUrl = HttpUtils.jointParams(url, params);
-		logger.info("loginUrl=" + loginUrl);
 		return loginUrl;
 	}
 
@@ -98,7 +97,6 @@ public class AuthServiceImpl implements AuthService {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-		logger.info("userInfo: " + respText);
 		return respText;
 	}
 
@@ -126,7 +124,6 @@ public class AuthServiceImpl implements AuthService {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-		logger.info("forward message and response text: " + respText);
 		return respText;
 	}
 

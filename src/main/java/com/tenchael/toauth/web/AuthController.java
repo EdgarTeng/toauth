@@ -2,9 +2,6 @@ package com.tenchael.toauth.web;
 
 import static com.tenchael.toauth.commons.Settings.LOGINED_USER;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -52,25 +49,21 @@ public class AuthController {
 		return "do";
 	}
 
-	@RequestMapping(value = { "/getUserInfo" })
-	public @ResponseBody Map<String, String> getUserInfo(Integer uid,
+	@RequestMapping(value = { "/getUserInfo" }, produces = "plain/text; charset=UTF-8")
+	public @ResponseBody String getUserInfo(Integer uid,
 			HttpServletRequest request, Model model) {
-		Map<String, String> ret = new HashMap<String, String>();
 		String userInfo = authService.getUserInfo(uid);
 		logger.info(userInfo);
-		ret.put("userInfo", userInfo);
-		return ret;
+		return userInfo;
 	}
 
-	@RequestMapping(value = { "/forwardMsg" })
-	public @ResponseBody Map<String, String> forwardMsg(Integer uid,
+	@RequestMapping(value = { "/forwardMsg" }, produces = "plain/text; charset=UTF-8")
+	public @ResponseBody String forwardMsg(Integer uid,
 			HttpServletRequest request, String msg, Model model) {
 		logger.info("forward message: " + msg);
-		Map<String, String> ret = new HashMap<String, String>();
-		String userInfo = authService.forwardMessage(uid, msg);
-		logger.info(userInfo);
-		ret.put("userInfo", userInfo);
-		return ret;
+		String responseText = authService.forwardMessage(uid, msg);
+		logger.info(responseText);
+		return responseText;
 	}
 
 }
