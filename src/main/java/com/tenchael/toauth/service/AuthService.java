@@ -2,12 +2,13 @@ package com.tenchael.toauth.service;
 
 public interface AuthService {
 
-	String getLoginUrl(Integer uid);
+	String generateThirdPartLoginAddr(Integer uid);
 
-	void obtainBasicAccountInfo(String code, String openid,Integer userId);
+	void storeBasicThirdPartInfo(String code, String openid, String openkey,
+			Integer userId);
 
 	String getUserInfo(Integer userId);
 
-	String forwardMsg(Integer userId, String msg);
+	String forwardMessage(Integer userId, String msg);
 
 }

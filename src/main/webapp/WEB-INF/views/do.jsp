@@ -15,12 +15,13 @@
 	<h3>chose the thing you want do</h3>
 
 	<form action="../getUserInfo" method="get">
-		<input type="submit" value="Obtain user info" />
+		<input type="hidden" name="uid" value="${uid }"> <input
+			type="submit" value="Obtain user info" />
 	</form>
 	<br>
 	<form action="../forwardMsg" method="post">
-		message: <input type="text" name="msg" /> <input type="submit"
-			value="Forward" />
+		<input type="hidden" name="uid" value="${uid }"> message: <input
+			type="text" name="msg" /> <input type="submit" value="Forward" />
 	</form>
 
 </body>

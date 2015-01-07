@@ -36,47 +36,40 @@ public class AuthController {
 		HttpSession session = request.getSession();
 		if (null != session.getAttribute(LOGINED_USER)) {
 			uid = (Integer) session.getAttribute(LOGINED_USER);
+			String loginUrl = authService.generateThirdPartLoginAddr(uid);
+			logger.info(loginUrl);
+			return "redirect:" + loginUrl;
 		}
-		String loginUrl = authService.getLoginUrl(uid);
-		logger.info(loginUrl);
-		model.addAttribute("loginUrl", loginUrl);
-		return "redirect:" + loginUrl;
+		return "redirect:login";
 	}
 
 	@RequestMapping("/getCode/{uid}")
 	public String getCode(@PathVariable(value = "uid") Integer uid,
-			String code, String openid, HttpServletRequest request, Model model) {
-		authService.obtainBasicAccountInfo(code, openid, uid);
+			String openkey, String code, String openid,
+			HttpServletRequest request, Model model) {
+		authService.storeBasicThirdPartInfo(code, openid, openkey, uid);
+		model.addAttribute("uid", uid);
 		return "do";
 	}
 
 	@RequestMapping(value = { "/getUserInfo" })
-	public @ResponseBody Map<String, String> getUserInfo(
+	public @ResponseBody Map<String, String> getUserInfo(Integer uid,
 			HttpServletRequest request, Model model) {
-		Integer uid = null;
-		HttpSession session = request.getSession();
 		Map<String, String> ret = new HashMap<String, String>();
-		if (null != session.getAttribute(LOGINED_USER)) {
-			uid = (Integer) session.getAttribute(LOGINED_USER);
-			String userInfo = authService.getUserInfo(uid);
-			logger.info(userInfo);			
-			ret.put("userInfo", userInfo);
-		}		
+		String userInfo = authService.getUserInfo(uid);
+		logger.info(userInfo);
+		ret.put("userInfo", userInfo);
 		return ret;
 	}
 
 	@RequestMapping(value = { "/forwardMsg" })
-	public @ResponseBody Map<String, String> forwardMsg(
+	public @ResponseBody Map<String, String> forwardMsg(Integer uid,
 			HttpServletRequest request, String msg, Model model) {
-		Integer uid = null;
-		HttpSession session = request.getSession();
+		logger.info("forward message: " + msg);
 		Map<String, String> ret = new HashMap<String, String>();
-		if (null != session.getAttribute(LOGINED_USER)) {
-			uid = (Integer) session.getAttribute(LOGINED_USER);
-			String userInfo = authService.forwardMsg(uid, msg);
-			logger.info(userInfo);			
-			ret.put("userInfo", userInfo);
-		}		
+		String userInfo = authService.forwardMessage(uid, msg);
+		logger.info(userInfo);
+		ret.put("userInfo", userInfo);
 		return ret;
 	}
 

@@ -1,23 +1,22 @@
 package com.tenchael.toauth.service.impl;
 
-import static com.tenchael.toauth.commons.Settings.*;
+import static com.tenchael.toauth.commons.Settings.ACCESS_TOKEN_URI;
+import static com.tenchael.toauth.commons.Settings.AUTHORIZE_URI;
+import static com.tenchael.toauth.commons.Settings.CLIENT_ID;
+import static com.tenchael.toauth.commons.Settings.CLIENT_SECRET;
+import static com.tenchael.toauth.commons.Settings.FORWARD_MSG_URL;
+import static com.tenchael.toauth.commons.Settings.OBTAIN_USER_INFO_URL;
+import static com.tenchael.toauth.commons.Settings.PUBLIC_IP_ADDRESS;
+import static com.tenchael.toauth.commons.Settings.REDIRECT_URI;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-
-import javax.net.ssl.X509TrustManager;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.tenchael.toauth.commons.HttpUtils;
 import com.tenchael.toauth.domain.UserDetails;
 import com.tenchael.toauth.service.AuthService;
 import com.tenchael.toauth.service.UserDetailsService;
@@ -32,24 +31,41 @@ public class AuthServiceImpl implements AuthService {
 	private UserDetailsService userDetailsService;
 
 	@Override
-	public String getLoginUrl(Integer uid) {
-		String url = AUTHORIZE_URI + "?client_id=" + CLIENT_ID
-				+ "&response_type=code&redirect_uri=" + REDIRECT_URI + "/"
-				+ uid;
-		return url;
+	public String generateThirdPartLoginAddr(Integer uid) {
+		String url = AUTHORIZE_URI;
+
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("client_id", CLIENT_ID);
+		params.put("response_type", "code");
+		params.put("redirect_uri", REDIRECT_URI + "/" + uid);
+
+		String loginUrl = HttpUtils.jointParams(url, params);
+		logger.info("loginUrl=" + loginUrl);
+		return loginUrl;
 	}
 
 	@Override
-	public void obtainBasicAccountInfo(String code, String openid, Integer uid) {
+	public void storeBasicThirdPartInfo(String code, String openid,
+			String openkey, Integer uid) {
 		UserDetails userDetails = userDetailsService.getByUserId(uid);
 		userDetails.setCode(code);
 		userDetails.setOpenid(openid);
+		userDetails.setOpenkey(openkey);
 		String url = ACCESS_TOKEN_URI;
-		String parameters = "client_id=" + CLIENT_ID + "&client_secret="
-				+ CLIENT_SECRET + "&redirect_uri=" + REDIRECT_URI + "/" + uid
-				+ "&grant_type=authorization_code&code="
-				+ userDetails.getCode();
-		String respText = postUrl(url, parameters);
+
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("client_id", CLIENT_ID);
+		params.put("client_secret", CLIENT_SECRET);
+		params.put("redirect_uri", REDIRECT_URI + "/" + uid);
+		params.put("grant_type", "authorization_code");
+		params.put("code", userDetails.getCode());
+
+		String respText = null;
+		try {
+			respText = HttpUtils.postRequest(url, params);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 		logger.info(respText);
 		String[] tmp = respText.toString().split("&");
 		String[] token = tmp[0].split("=");
@@ -64,91 +80,54 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public String getUserInfo(Integer uid) {
 		UserDetails userDetails = userDetailsService.getByUserId(uid);
-		String ip = getPubIP();
 		String url = OBTAIN_USER_INFO_URL;
-		String parameters = "format=json&oauth_consumer_key=" + CLIENT_ID
-				+ "&access_token=" + userDetails.getAccessToken()
-				+ "&redirect_uri=" + "&openid=" + userDetails.getOpenid()
-				+ "&clientip=" + ip + "&oauth_version=2.a&scope=all";
-		String respText = postUrl(url, parameters);
+
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("format", "json");
+		params.put("oauth_consumer_key", CLIENT_ID);
+		params.put("access_token", userDetails.getAccessToken());
+		params.put("openid", userDetails.getOpenid());
+		params.put("clientip", PUBLIC_IP_ADDRESS);
+		params.put("redirect_uri", "");
+		params.put("oauth_version", "2.a");
+		params.put("scope", "all");
+
+		String respText = null;
+		try {
+			respText = HttpUtils.postRequest(url, params);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 		logger.info("userInfo: " + respText);
 		return respText;
 	}
 
 	@Override
-	public String forwardMsg(Integer uid, String msg) {
+	public String forwardMessage(Integer uid, String msg) {
 		UserDetails userDetails = userDetailsService.getByUserId(uid);
-		String ip = getPubIP();
 		String url = FORWARD_MSG_URL;
-		String parameters = "format=xml&content="
-				+ msg
-				+ "&longitude=113.421234&latitude=22.354231&syncflag=0&oauth_consumer_key="
-				+ CLIENT_ID + "&access_token=" + userDetails.getAccessToken()
-				+ "&openid=" + userDetails.getOpenid() + "&clientip=" + ip
-				+ "&oauth_version=2.a&scope=all";
-		String respText = postUrl(url, parameters);
+
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("content", msg);
+		params.put("access_token", userDetails.getAccessToken());
+		params.put("openid", userDetails.getOpenid());
+		params.put("clientip", PUBLIC_IP_ADDRESS);
+		params.put("format", "json");
+		params.put("longitude", "113.421234");
+		params.put("latitude", "22.354231");
+		params.put("syncflag", "0");
+		params.put("oauth_consumer_key", CLIENT_ID);
+		params.put("oauth_version", "2.a");
+		params.put("scope", "all");
+
+		String respText = null;
+		try {
+			respText = HttpUtils.postRequest(url, params);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 		logger.info("forward message and response text: " + respText);
 		return respText;
-	}
-
-	private static String getPubIP() {
-		return "202.197.9.8";
-	}
-
-	private static String postUrl(String url, String parameters) {
-		StringBuffer respInfo = new StringBuffer();
-		try {
-			trustAllHttpsCertificates();// 设置信任所有的http证书
-			URLConnection conn = new URL(url).openConnection();
-			conn.setDoOutput(true);// 这里是关键，表示我们要向链接里注入的参数
-			OutputStreamWriter out = new OutputStreamWriter(
-					conn.getOutputStream());// 获得连接输出流
-			out.write(parameters);
-			out.flush();
-			out.close();
-			// 到这里已经完成了，开始打印返回的HTML代码
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					conn.getInputStream()));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				respInfo.append(line);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return respInfo.toString();
-	}
-
-	private static void trustAllHttpsCertificates() {
-		javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[1];
-		trustAllCerts[0] = new X509TrustManager() {
-			@Override
-			public X509Certificate[] getAcceptedIssuers() {
-				return null;
-			}
-
-			@Override
-			public void checkServerTrusted(X509Certificate[] arg0, String arg1)
-					throws CertificateException {
-			}
-
-			@Override
-			public void checkClientTrusted(X509Certificate[] arg0, String arg1)
-					throws CertificateException {
-			}
-		};
-		javax.net.ssl.SSLContext sc;
-		try {
-			sc = javax.net.ssl.SSLContext.getInstance("SSL");
-			sc.init(null, trustAllCerts, null);
-			javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc
-					.getSocketFactory());
-		} catch (KeyManagementException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-
 	}
 
 }

@@ -12,6 +12,11 @@ public class Settings {
 	public static String CLIENT_SECRET;
 	public static String REDIRECT_URI;
 
+	/**
+	 * 本web应用的公网IP
+	 */
+	public static String PUBLIC_IP_ADDRESS;
+
 	public final static String LOGINED_USER = "loginedUser";
 
 	private Properties configProperties;
@@ -46,6 +51,9 @@ public class Settings {
 					.getProperty("com.tencent.weibo.client_secret");
 			Settings.REDIRECT_URI = this
 					.getProperty("com.tencent.weibo.redirect_uri");
+			Settings.PUBLIC_IP_ADDRESS = this
+					.getProperty("com.tenchael.toauth.public_address");
+
 		} catch (NotFoundException e) {
 			e.printStackTrace();
 		}
