@@ -1,5 +1,6 @@
 package com.tenchael.toauth.commons;
 
+import java.io.IOException;
 import java.util.Properties;
 
 public class Settings {
@@ -16,6 +17,11 @@ public class Settings {
 	 * 本web应用的公网IP
 	 */
 	public static String PUBLIC_IP_ADDRESS;
+
+	/**
+	 * 本web应用的内网地址
+	 */
+	public static String PRIVATE_IP_ADDRESS;
 
 	public final static String LOGINED_USER = "loginedUser";
 
@@ -37,6 +43,10 @@ public class Settings {
 		this.configProperties = configProperties;
 
 		try {
+
+			Settings.PUBLIC_IP_ADDRESS = HttpUtils.discoverPublicIp();
+			Settings.PRIVATE_IP_ADDRESS = HttpUtils.discoverPrivateIp();
+
 			Settings.AUTHORIZE_URI = this
 					.getProperty("com.tencent.weibo.authorize_uri");
 			Settings.ACCESS_TOKEN_URI = this
@@ -51,10 +61,10 @@ public class Settings {
 					.getProperty("com.tencent.weibo.client_secret");
 			Settings.REDIRECT_URI = this
 					.getProperty("com.tencent.weibo.redirect_uri");
-			Settings.PUBLIC_IP_ADDRESS = this
-					.getProperty("com.tenchael.toauth.public_address");
 
 		} catch (NotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
